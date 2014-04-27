@@ -98,6 +98,16 @@ def build_keypoint_map(labels, active_keypoints=None):
 		output.append(next_map)
 	return output
 
+def quarter_size_keypoint_map(keypoint_map):
+	output = []
+	for kpm in keypoint_map:
+		new_kpm = zeros((48,48))
+		for i in xrange(48):
+			for j in xrange(48):
+				new_kpm[i,j] = max(kpm[i*2:(i+1)*2, j*2:(j+1)*2])
+		output.append(new_kpm)
+	return output
+
 def add_horizontal_flips(train, keypoint_map):
 	train2 = []
 	kpm2 = []
@@ -231,7 +241,7 @@ def flip_horizontal(matrix):
 
 	return matrix[...,::-1]
 
-def build_eye_trainset(train_set, labels):
+def build_eye_trainset(train_set, labels, add_negatives=False):
 	# to_shuffle = zip(train_set, labels)
 	# np.random.shuffle(to_shuffle)
 	# train_set, labels = zip(*to_shuffle)
@@ -310,25 +320,25 @@ def build_eye_trainset(train_set, labels):
 			eyes.append((flip_horizontal(subimg), 1, i))
 			eyes.append((subimg, 1, i))
 
-		# def random(x):
-		# 	return int(np.random.random() * x)
+		if add_negatives:
+			def random(x):
+				return int(np.random.random() * x)
 
-		# def too_close(new, *others):
-		# 	for other in others:
-		# 		if euclidean_distance(new, other) < TOO_CLOSE_VALUE:
-		# 			return True
-		# 	return False
+			def too_close(new, *others):
+				for other in others:
+					if euclidean_distance(new, other) < TOO_CLOSE_VALUE:
+						return True
+				return False
 
+			for _ in xrange(2):
+				tl = (random(96 - EYE_HEIGHT), random(96 - EYE_WIDTH))
+				br = (tl[0] + EYE_HEIGHT, tl[1] + EYE_WIDTH)
 
-		# for _ in xrange(2):
-		# 	tl = (random(96 - EYE_HEIGHT), random(96 - EYE_WIDTH))
-		# 	br = (tl[0] + EYE_HEIGHT, tl[1] + EYE_WIDTH)
+				while too_close(tl, tl_l, tl_r) or too_close(br, br_l, br_r):
+					tl = (random(96 - EYE_HEIGHT), random(96 - EYE_WIDTH))
+					br = (tl[0] + EYE_HEIGHT, tl[1] + EYE_WIDTH)
 
-		# 	while too_close(tl, tl_l, tl_r) or too_close(br, br_l, br_r):
-		# 		tl = (random(96 - EYE_HEIGHT), random(96 - EYE_WIDTH))
-		# 		br = (tl[0] + EYE_HEIGHT, tl[1] + EYE_WIDTH)
-
-		# 	eyes.append((get_subimage(train_set[i], tl, br), 0))
+				eyes.append((get_subimage(train_set[i], tl, br), 0))
 
 	return eyes
 

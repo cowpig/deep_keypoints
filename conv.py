@@ -4,7 +4,7 @@ import theano
 from theano.tensor.signal import downsample
 
 class ConvLayer(object):
-	def __init__(self, inputs, filter_shape, image_shape):#, poolsize=(1, 1)):
+	def __init__(self, inputs, filter_shape, image_shape, poolsize=(2, 2)):
 		assert image_shape[1] == filter_shape[1]
 		self.inputs = inputs
 		rng = np.random.RandomState(23455)
@@ -23,11 +23,10 @@ class ConvLayer(object):
 		# convolve input feature maps with filters
 		conv_out = T.nnet.conv.conv2d(inputs, self.W,
 				filter_shape=filter_shape, image_shape=image_shape)
+	
+		pooled_out = downsample.max_pool_2d(input=conv_out,
+											ds=poolsize, ignore_border=True)
 
-		self.output = T.tanh(conv_out + self.b.dimshuffle('x', 0, 'x', 'x'))		
-		# pooled_out = downsample.max_pool_2d(input=conv_out,
-		# 									ds=poolsize, ignore_border=True)
-
-		# self.output = T.tanh(pooled_out + self.b.dimshuffle('x', 0, 'x', 'x'))
+		self.output = T.tanh(pooled_out + self.b.dimshuffle('x', 0, 'x', 'x'))
 
 		self.params = [self.W, self.b]
