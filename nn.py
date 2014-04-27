@@ -8,7 +8,7 @@ class NNLayer(object):
                  activation=T.tanh):
         self.inputs = inputs
 
-        rng = numpy.random.RandomState(1234)
+        rng = np.random.RandomState(1234)
 
         if W is None:
             W_values = np.asarray(rng.uniform(
