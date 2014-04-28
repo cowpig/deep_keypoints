@@ -7,8 +7,7 @@ from scipy import ndimage
 from scipy.misc import imresize
 
 
-# literals that are specific to our dataset
-BAD_IMAGES = [1747, 1908, 2199]
+BAD_IMAGES = [1747, 1907, 2199]
 EYE_WIDTH = 24
 EYE_HEIGHT = 18
 MOUTH_WIDTH = 44
@@ -54,9 +53,9 @@ def load_train_set(filename="data/training.csv", required_keypoints=None):
 		label_names = r.next()[:-1]
 
 		for i, line in enumerate(r):
-			try:
-				if i not in BAD_IMAGES:
-					label = [str_to_float(s) for s in line[:-1]]
+			if i not in BAD_IMAGES:
+				label = [str_to_float(s) for s in line[:-1]]
+				if required_keypoints != None:
 					bad = False
 					for kp in required_keypoints:
 						for index in KEYPOINT_DICT[kp]:
@@ -65,13 +64,9 @@ def load_train_set(filename="data/training.csv", required_keypoints=None):
 					if bad:
 						continue
 
-					labels.append(label)
-					unrolled = np.array([float(s) for s in line[-1].split(' ')])
-					train_set.append(to_matrix(unrolled) / 255.)
-			except:
-				import pdb; pdb.set_trace() # loads up python debugger
-			# if i > 50:
-			#     break
+				labels.append(label)
+				unrolled = np.array([float(s) for s in line[-1].split(' ')])
+				train_set.append(to_matrix(unrolled) / 255.)
 
 	return (train_set, labels, label_names)
 
@@ -138,12 +133,21 @@ def to_matrix(line):
 	return np.reshape(line, (96, 96))
 
 # takes an image and displays it
-def display_image(img):
+def display_image(img, label=None):
 	if len(img) == 96*96:
 		plt.imshow(to_matrix(img))
 	else:
 		plt.imshow(img)
 	plt.gray()
+	if label != None:
+		x = []
+		y = []
+		pairs = zip(label[::2], label[1::2])
+		for pair in pairs:
+			if None not in pair:
+				x.append(pair[0])
+				y.append(pair[1])
+		plt.scatter(x,y)
 	plt.show()
 
 # takes an image and displays it
@@ -304,7 +308,7 @@ def build_eye_trainset(train_set, labels, add_negatives=False):
 			top = int(np.round(top))
 			bot = int(np.round(bot))
 
-			# known issue on image #1964
+			# deals with two specific outlier cases
 			if (i == 1964) or (i == 2189):
 				left += 1
 				right += 1
@@ -330,7 +334,7 @@ def build_eye_trainset(train_set, labels, add_negatives=False):
 						return True
 				return False
 
-			for _ in xrange(2):
+			for _ in xrange(1):
 				tl = (random(96 - EYE_HEIGHT), random(96 - EYE_WIDTH))
 				br = (tl[0] + EYE_HEIGHT, tl[1] + EYE_WIDTH)
 
@@ -342,10 +346,10 @@ def build_eye_trainset(train_set, labels, add_negatives=False):
 
 	return eyes
 
-def build_mouth_trainset(train_set, labels):
-	to_shuffle = zip(train_set, labels)
-	np.random.shuffle(to_shuffle)
-	train_set, labels = zip(*to_shuffle)
+def build_mouth_trainset(train_set, labels, add_negatives=False):
+	# to_shuffle = zip(train_set, labels)
+	# np.random.shuffle(to_shuffle)
+	# train_set, labels = zip(*to_shuffle)
 
 	mouth_left_corner = (22, 23)
 	mouth_right_corner = (24, 25)
@@ -356,6 +360,9 @@ def build_mouth_trainset(train_set, labels):
 	distances = []
 
 	for i, label in enumerate(labels):
+		# mouth is just too close to the border in this image
+		if i==1964:
+			continue
 		dist_h = label_distance(label, mouth_left_corner, mouth_right_corner)
 		dist_v = label_distance(label, mouth_center_top_lip, mouth_center_bottom_lip)
 
@@ -381,7 +388,7 @@ def build_mouth_trainset(train_set, labels):
 			top = int(np.round(top))
 			bot = int(np.round(bot))
 
-			while (bot > 96):
+			while (bot > 95):
 				top -= 1
 				bot -= 1
 
@@ -393,26 +400,38 @@ def build_mouth_trainset(train_set, labels):
 				import pdb; pdb.set_trace()
 
 			mouths.append((subimg, 1, i))
+			mouths.append((flip_horizontal(subimg), 1, i))
 
-			def random(x):
-				return int(np.random.random() * x)
+			if add_negatives:
+				def random(x):
+					return int(np.random.random() * x)
 
-			def too_close(new, *others):
-				for other in others:
-					if euclidean_distance(new, other) < TOO_CLOSE_VALUE:
-						return True
-				return False
+				def too_close(new, *others):
+					for other in others:
+						if euclidean_distance(new, other) < TOO_CLOSE_VALUE:
+							return True
+					return False
 
-			tl = (random(96 - MOUTH_HEIGHT), random(96 - MOUTH_WIDTH))
-			br = (tl[0] + MOUTH_HEIGHT, tl[1] + MOUTH_WIDTH)
-
-			while too_close(tl, tl_m, (0,0)) or too_close(br, br_m, (0,0)):
 				tl = (random(96 - MOUTH_HEIGHT), random(96 - MOUTH_WIDTH))
 				br = (tl[0] + MOUTH_HEIGHT, tl[1] + MOUTH_WIDTH)
 
-			mouths.append((get_subimage(train_set[i], tl, br), 0))
+				while too_close(tl, tl_m, (0,0)) or too_close(br, br_m, (0,0)):
+					tl = (random(96 - MOUTH_HEIGHT), random(96 - MOUTH_WIDTH))
+					br = (tl[0] + MOUTH_HEIGHT, tl[1] + MOUTH_WIDTH)
+
+				mouths.append((get_subimage(train_set[i], tl, br), 0))
 
 	return mouths
+
+def eyes_with_mouths_set():
+	trainset, labels, names = load_train_set()
+	eyes_and_randoms = build_eye_trainset(trainset, labels, True)
+	mouths = build_mouth_trainset(trainset, labels)
+	for mouth in mouths:
+		eyes_and_randoms.append((imresize(mouth[0], (19,25)), mouth[1], 0))
+
+	return eyes_and_randoms
+
 
 def cross_sample(mouths, eyes):
 	# the eyes sample is several times larger than the mouth
