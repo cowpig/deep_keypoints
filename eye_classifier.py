@@ -11,23 +11,23 @@ n_train = int(len(whole_set) * 0.6)
 n_valid = int(len(whole_set) * 0.15)
 n_test = len(whole_set) - n_train - n_valid
 
-xtrain = theano.shared(np.array([item[0].ravel() for item in whole_set[:n_train]]), 
+xtrain = theano.shared(np.array([item[0].ravel() for item in whole_set[:n_train]]).astype("float32"), 
 						borrow=True)
-ytrain = theano.shared(np.array([item[1] for item in whole_set[:n_train]]), 
+ytrain = theano.shared(np.array([item[1] for item in whole_set[:n_train]]).astype("int32"), 
 						borrow=True)
 
 xvalid = theano.shared(np.array(
-			[item[0].ravel() for item in whole_set[n_train:n_train+n_valid]]), 
+			[item[0].ravel() for item in whole_set[n_train:n_train+n_valid]]).astype("float32"), 
 		borrow=True)
 yvalid = theano.shared(np.array(
-			[item[1] for item in whole_set[n_train:n_train+n_valid]]), 
+			[item[1] for item in whole_set[n_train:n_train+n_valid]]).astype("int32"), 
 		borrow=True)
 
 xtest = theano.shared(np.array(
-			[item[0].ravel() for item in whole_set[n_train+n_valid:]]), 
+			[item[0].ravel() for item in whole_set[n_train+n_valid:]]).astype("float32"), 
 		borrow=True)
 ytest = theano.shared(np.array(
-			[item[1] for item in whole_set[n_train+n_valid:]]), 
+			[item[1] for item in whole_set[n_train+n_valid:]]).astype("int32"), 
 		borrow=True)
 
 
@@ -36,7 +36,7 @@ ytest = theano.shared(np.array(
 
 index = T.lscalar()
 x = T.matrix('x')
-y = T.lvector('y')
+y = T.ivector('y')
 
 batch_size = 32
 learning_rate = 0.01
@@ -107,16 +107,27 @@ train_costs = []
 valid_scores = []
 test_scores = []
 
-def get_valid_score():
-	return np.mean([valid_function(i) for i in xrange(n_valid_batches)])
-	
-def get_test_score():
-	return np.mean([test_function(i) for i in xrange(n_valid_batches)]) 
+fig = plt.figure()
 
+
+def get_score(function, n_batches):
+	scores = [function(i) for i in xrange(n_batches)]
+	minscore = 9999999
+	min_index = -1
+	for i, score in enumerate(scores):
+		if score < minscore:
+			minscore = score
+			min_index = i
+
+	# tile_raster_images(yvalid.get_value()[min_index:min_index+32], img_shape=(19,25), 
+	# 		tile_shape=(19, 25), tile_spacing=(0, 0))
+
+	return np.mean(scores)
 
 done = False
 i = 0
 epoch = 0
+start_time = time.clock()
 while not done:
 	epoch += 1
 	for batch in xrange(n_train_batches):
@@ -124,7 +135,7 @@ while not done:
 		train_costs.append(minibatch_cost)
 
 		if (i+1) % 100 == 0:
-			valid_score = get_valid_score()
+			valid_score = get_score(valid_function, n_valid_batches)
 			valid_scores.append((i, valid_score))
 			
 			print 'Epoch {}, minibatch {}/{}, validation error:\n\t{:.05f}'.format(
@@ -137,7 +148,7 @@ while not done:
 				best_valid_score = valid_score
 				best_iter = i
 
-				test_score = get_test_score()
+				test_score = get_score(test_function, n_test_batches)
 				test_scores.append((i, test_score))
 
 				print "Test score:\n\t{:.05f}".format(test_score)
@@ -147,12 +158,14 @@ while not done:
 			done = True
 			break
 
-with open("data/scores/eye_class_no_pretrain.pkl", "wb") as f:
-    cPickle.dump([train_costs, valid_scores, test_scores], f)
+print "completed {} epochs in {}".format(epoch, time.clock() - start_time)
 
-with open("data/scores/eye_class_with_pretrain.pkl", "rb") as f:
-	train_aa, valid_aa, test_aa = cPickle.load(f)
+# with open("data/scores/eye_class_no_pretrain.pkl", "wb") as f:
+#     cPickle.dump([train_costs, valid_scores, test_scores], f)
 
-with open("data/scores/eye_class_no_pretrain.pkl", "rb") as f:
-	train_nn, valid_nn, test_nn = cPickle.load(f)
+# with open("data/scores/eye_class_with_pretrain.pkl", "rb") as f:
+# 	train_aa, valid_aa, test_aa = cPickle.load(f)
+
+# with open("data/scores/eye_class_no_pretrain.pkl", "rb") as f:
+# 	train_nn, valid_nn, test_nn = cPickle.load(f)
 
