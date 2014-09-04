@@ -53,7 +53,9 @@ L1 = abs(layer1.W).sum() + abs(layer2.W).sum()
 cost = (-1.0/batch_size) * (T.dot(layer2.output.reshape(y.shape), y) +
 			T.dot((1-layer2.output).reshape(y.shape), (1-y)) ) + L1_reg * L1
 
-errors = T.mean(T.neq(T.round(layer2.output).reshape(y.shape), y))
+errors_64bit = T.mean(T.neq(T.round(layer2.output).reshape(y.shape), y))
+errors = T.cast(errors_64bit, 'float32')
+
 
 gparams = []
 for param in layer1.params + layer2.params:
