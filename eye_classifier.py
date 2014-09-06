@@ -11,20 +11,20 @@ n_train = int(len(whole_set) * 0.6)
 n_valid = int(len(whole_set) * 0.15)
 n_test = len(whole_set) - n_train - n_valid
 
-xtrain = theano.shared(np.array([item[0].ravel() for item in whole_set[:n_train]]).astype("float32"), 
+xtrain = theano.shared(np.array([item[0].ravel() for item in whole_set[:n_train]]).astype(theano.config.floatX), 
 						borrow=True)
 ytrain = theano.shared(np.array([item[1] for item in whole_set[:n_train]]).astype("int32"), 
 						borrow=True)
 
 xvalid = theano.shared(np.array(
-			[item[0].ravel() for item in whole_set[n_train:n_train+n_valid]]).astype("float32"), 
+			[item[0].ravel() for item in whole_set[n_train:n_train+n_valid]]).astype(theano.config.floatX), 
 		borrow=True)
 yvalid = theano.shared(np.array(
 			[item[1] for item in whole_set[n_train:n_train+n_valid]]).astype("int32"), 
 		borrow=True)
 
 xtest = theano.shared(np.array(
-			[item[0].ravel() for item in whole_set[n_train+n_valid:]]).astype("float32"), 
+			[item[0].ravel() for item in whole_set[n_train+n_valid:]]).astype(theano.config.floatX), 
 		borrow=True)
 ytest = theano.shared(np.array(
 			[item[1] for item in whole_set[n_train+n_valid:]]).astype("int32"), 
@@ -34,17 +34,17 @@ ytest = theano.shared(np.array(
 ###############
 # BUILD MODEL
 
-index = T.lscalar()
+index = T.iscalar()
 x = T.matrix('x')
 y = T.ivector('y')
 
 batch_size = 32
 learning_rate = 0.01
 
-with open("data/save/aa/single_layer/eyes_epoch_9900_291.0580.pkl", "rb") as f:
-	W, b, _ = cPickle.load(f)
+# with open("data/save/aa/single_layer/eyes_epoch_9900_291.0580.pkl", "rb") as f:
+# 	W, b, _ = cPickle.load(f)
 
-layer1 = NNLayer(inputs=x, n_in=19*25, n_out=500, activation=T.nnet.sigmoid, W=W, b=b)
+layer1 = NNLayer(inputs=x, n_in=19*25, n_out=500, activation=T.nnet.sigmoid)#, W=W, b=b)
 layer2 = NNLayer(inputs=layer1.output, n_in=500, n_out=1, activation=T.nnet.sigmoid)
 
 L1_reg = 0.00001
@@ -54,7 +54,7 @@ cost = (-1.0/batch_size) * (T.dot(layer2.output.reshape(y.shape), y) +
 			T.dot((1-layer2.output).reshape(y.shape), (1-y)) ) + L1_reg * L1
 
 errors_64bit = T.mean(T.neq(T.round(layer2.output).reshape(y.shape), y))
-errors = T.cast(errors_64bit, 'float32')
+errors = T.cast(errors_64bit, theano.config.floatX)
 
 
 gparams = []
@@ -64,7 +64,7 @@ for param in layer1.params + layer2.params:
 
 updates = []
 for param, gparam in zip(layer1.params + layer2.params, gparams):
-	updates.append((param, param - learning_rate * gparam))
+	updates.append((param, T.cast(param - learning_rate * gparam, theano.config.floatX)))
 
 
 train_function = theano.function(inputs=[index], 
@@ -170,4 +170,3 @@ print "completed {} epochs in {}".format(epoch, time.clock() - start_time)
 
 # with open("data/scores/eye_class_no_pretrain.pkl", "rb") as f:
 # 	train_nn, valid_nn, test_nn = cPickle.load(f)
-
