@@ -34,6 +34,22 @@ KEYPOINT_DICT = {
 COMMON_KEYPOINTS = ['left_eye_center', 'right_eye_center', 
 							'nose_tip', 'center_mouth_bottom_lip']
 
+# this will take an image of wxh dimensions and create cut**2 (w-cut)x(h-cut)
+#	new images, and match the labels to these subimages. This way a dataset can be
+#	massively increased in size
+# assumes x, y are both lists of matrices that are the same dimensions
+def create_cuts(x, y, cut):
+	new_x = []
+	new_y = []
+	w, h = x.shape
+	for img, label in zip(x, y):
+		for i in xrange(cut):
+			for j in xrange(cut):
+				new_x.append(img[i:w-i, j:j-i])
+				new_y.append(label[i:w-i, j:j-i])
+	return (img, label)
+
+
 def str_to_float(string):
 	if string == '':
 		return None
