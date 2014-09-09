@@ -41,13 +41,13 @@ COMMON_KEYPOINTS = ['left_eye_center', 'right_eye_center',
 def create_cuts(x, y, cut):
 	new_x = []
 	new_y = []
-	w, h = x.shape
+	w, h = x[0].shape
 	for img, label in zip(x, y):
 		for i in xrange(cut):
 			for j in xrange(cut):
 				new_x.append(img[i:w-i, j:j-i])
 				new_y.append(label[i:w-i, j:j-i])
-	return (img, label)
+	return (new_x, new_y)
 
 
 def str_to_float(string):
