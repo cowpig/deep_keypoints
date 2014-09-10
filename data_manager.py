@@ -529,3 +529,16 @@ def tile_raster_images(X, img_shape, tile_shape, tile_spacing=(0, 0),
                     ] = this_img * c
 
     return out_array
+
+def visualize_hidden(weights, img_shape=(19,25), vis_shape=(25,20)):
+    img_h, img_w = img_shape
+    n_imgs_vert, n_imgs_hor = vis_shape
+
+    assert n_imgs_hor * n_imgs_vert == self.n_hidden
+
+    if type(W) == theano.tensor:
+        weights = weights.get_value(borrow=True).T
+
+    return data_manager.tile_raster_images(
+        X=weights, img_shape=img_shape, tile_shape=vis_shape,
+        tile_spacing=(1, 1))
