@@ -48,7 +48,7 @@ class Trainer(object):
 		# theano tensors to be used in training
 		self.params = [param for layer in self.layers for param in layer.parameters]
 		self.gradients = T.grad(self.cost, self.params)
-		self.lr = T.dscalar('lr')
+		self.lr = T.scalar('lr')
 		self.i, self.bs = T.iscalars('i', 'bs')
 
 		# keeps track of momentum during gradient descent

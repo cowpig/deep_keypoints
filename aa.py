@@ -97,7 +97,7 @@ class Autoencoder(object):
         return self.recreation_function(img)
 
 
-def load(f, input_tensor, mask=None, original_input=None, activation=T.nnet.sigmoid):
+def load(f, inputs, mask=None, original_input=None, activation=T.nnet.sigmoid):
     data = np.load(f)
     return Autoencoder(data['n_in'], data['n_hidden'], inputs, mask, data['pct_blackout'], 
                             data['W'], data['b_in'], data['b_out'], original_input, activation)
