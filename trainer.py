@@ -16,10 +16,9 @@ class Trainer(object):
 	# takes a list of NN layers, all of which will be updated with respect
 	#	to the provided cost function. In the case where only one layer needs
 	#	to be trained, only provide that layer to the trainer.
-	def __init__(self, layers, cost, x, shared_x, y, shared_y
-						y_mask=None, shared_mask=None, 
-						batch_size=64, learning_rate=0.05, 
-						momentum=0.9, weight_decay=0.0002):
+	def __init__(self, layers, cost, x, shared_x, y, shared_y, x_mask=None,
+						y_mask=None, shared_mask=None, batch_size=64, 
+						learning_rate=0.05, momentum=0.9, weight_decay=0.0002):
 
 		if type(layers) == list:
 			self.layers = layers
@@ -46,7 +45,7 @@ class Trainer(object):
 		self.learning_rate = learning_rate
 
 		# theano tensors to be used in training
-		self.params = [param for layer in self.layers for param in layer.parameters]
+		self.params = [param for layer in self.layers for param in layer.params]
 		self.gradients = T.grad(self.cost, self.params)
 		self.lr = T.scalar('lr')
 		self.i, self.bs = T.iscalars('i', 'bs')

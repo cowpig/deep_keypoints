@@ -52,13 +52,13 @@ class Autoencoder(object):
 
         self.cost = T.mean(self.entropy)
 
-        self.parameters = [self.W, self.b_in, self.b_out]
-        self.gradients = T.grad(self.cost, self.parameters)
+        self.params = [self.W, self.b_in, self.b_out]
+        self.gradients = T.grad(self.cost, self.params)
 
         self.learning_rate = learning_rate
 
         self.updates = []
-        for param, grad in zip(self.parameters, self.gradients):
+        for param, grad in zip(self.params, self.gradients):
             self.updates.append((param, param - self.learning_rate * grad))
 
         i, batch_size = T.iscalars('i', 'batch_size')
