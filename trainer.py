@@ -45,6 +45,10 @@ class Trainer(object):
 			self.momentum = np.float32(momentum)
 			self.weight_decay = np.float32(weight_decay)
 			self.learning_rate = np.float32(learning_rate)
+		elif theano.config.floatX == "float64":
+			self.momentum = np.float_(momentum)
+			self.weight_decay = np.float_(weight_decay)
+			self.learning_rate = np.float_(learning_rate)
 
 		# theano tensors to be used in training
 		self.params = [param for layer in self.layers for param in layer.params]
