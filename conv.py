@@ -5,11 +5,11 @@ from theano.tensor.signal import downsample
 
 class ConvLayer(object):
 	def __init__(self, inputs, filter_shape, image_shape, poolsize=(2, 2), 
-					stride=(1,1), activ=T.tanh):
+					stride=(1,1), activation=T.tanh):
 		assert image_shape[1] == filter_shape[1]
 		self.inputs = inputs
 		rng = np.random.RandomState(23455)
-		self.activ = activ
+		self.activation = activation
 
 		fan_in =  np.prod(filter_shape[1:])
 		W_values = np.asarray(rng.uniform(
@@ -30,6 +30,6 @@ class ConvLayer(object):
 		pooled_out = downsample.max_pool_2d(input=conv_out,
 											ds=poolsize, ignore_border=False)
 
-		self.output = self.activ(pooled_out + self.b.dimshuffle('x', 0, 'x', 'x'))
+		self.output = self.activation(pooled_out + self.b.dimshuffle('x', 0, 'x', 'x'))
 
 		self.params = [self.W, self.b]

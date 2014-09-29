@@ -1,13 +1,15 @@
-from conv import *
-from nn import *
-from data_manager import *
+import conv
+import nn
+import data_manager as dm
 import cPickle
 import time
+import theano.tensor as T
+import theano
+import numpy as np
 
-
-train, labels = shuffle_all(*full_trainset())
-train = np.array([img.ravel() for img in train])
-labels = np.array([kpm.ravel() for kpm in labels])
+train, labels = dm.shuffle_all(*dm.full_trainset())
+train = np.array([img.ravel() for img in train])[:256]
+labels = np.array([kpm.ravel() for kpm in labels])[:256]    
 n_train = len(train)
 
 strain = theano.shared(train)
@@ -24,9 +26,11 @@ y = T.matrix('y')
 
 initial_input = x.reshape((batch_size,1) + img_shape)
 
-layer1 = ConvLayer(inputs=initial_input,
+layer1 = conv.ConvLayer(inputs=initial_input,
         image_shape=(batch_size, 1) + img_shape,
         filter_shape=(50, 1, 4, 4))
+
+print (batch_size, 1) + img_shape
 
 glue = layer1.output.flatten(2)
 
@@ -36,10 +40,11 @@ noise = T.shared_randomstreams.RandomStreams(1234).binomial(
                             dtype=theano.config.floatX)
 dropout = noise * glue
 
-layer2 = NNLayer(inputs=dropout,
+layer2 = nn.NNLayer(inputs=dropout,
         n_in=105800, n_out=1024, activation=T.nnet.sigmoid)
 
-layer3 = NNLayer(inputs=layer2.output, n_in=1024, n_out=96*96, activation=T.nnet.sigmoid)
+layer3 = nn.NNLayer(inputs=layer2.output, n_in=1024, n_out=96*96, 
+                    activation=T.nnet.sigmoid)
 
 entropy = -T.sum(y * T.log(layer3.output) + 
                         (1 - y) * T.log(1 - layer3.output), axis=1)
