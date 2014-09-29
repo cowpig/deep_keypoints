@@ -40,48 +40,60 @@ class Trainer(object):
 
 		# hyperparameters:
 		self.batch_size = batch_size
-		self.momentum = momentum
-		self.weight_decay = weight_decay
-		self.learning_rate = learning_rate
+
+		if theano.config.floatX == "float32":
+			self.momentum = np.float32(momentum)
+			self.weight_decay = np.float32(weight_decay)
+			self.learning_rate = np.float32(learning_rate)
 
 		# theano tensors to be used in training
 		self.params = [param for layer in self.layers for param in layer.params]
 		self.gradients = T.grad(self.cost, self.params)
-		self.lr = T.scalar('lr')
-		self.i, self.bs = T.iscalars('i', 'bs')
-
 		# keeps track of momentum during gradient descent
 		if momentum:
-			self.momentums = {param : theano.shared(np.zeros(param.get_value().shape)) 
-									for param in self.params}
+			self.momentums = {
+					param : theano.shared(np.zeros(
+						param.get_value().shape, dtype=theano.config.floatX),
+						borrow=True) 
+					for param in self.params
+			}
 
 		self.steps = 0
 		self.costs = [(0, float('inf'))]
 
 
 	def get_training_function(self):
-		given = {self.x : self.shared_x[self.i:self.i+self.bs],
-				self.lr : self.learning_rate}
+		lr, wd, mom = T.scalars('lr', 'wd', 'mom')
+		i, bs = T.iscalars('i', 'bs')
+
+		given = {self.x : self.shared_x[i : i + bs],
+				     lr : self.learning_rate,
+				     wd : self.weight_decay}
+
+		if self.momentum:
+			given[mom] = self.momentum
 
 		if self.y:
-			given[self.y] = self.shared_y[self.i:self.i+self.bs]
+			given[self.y] = self.shared_y[i : i + bs]
 
 		if self.x_mask:
-			given[self.x_mask] = self.shared_mask[self.i:self.i+self.bs]
+			given[self.x_mask] = self.shared_mask[i : i + bs]
 
 		self.updates = OrderedDict()
 		for param, grad in zip(self.params, self.gradients):
 			if self.momentum:
-				update = self.momentum * self.momentums[param] - self.lr * grad
+				update = mom * self.momentums[param] - lr * grad
 				self.updates[self.momentums[param]] = update
 			else:
-				update = - self.learning_rate * grad
+				update = - lr * grad
 
-			self.updates[param] = param * (1-self.weight_decay) + update
+			self.updates[param] = param * (1 - wd) + update
 
+		# import pdb; pdb.set_trace()
 
-		return theano.function([self.i, self.bs], self.cost, 
-						updates=self.updates, givens=given)
+		return theano.function([i, bs], self.cost, 
+						updates=self.updates, 
+						givens=given)
 
 
 
