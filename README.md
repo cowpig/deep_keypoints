@@ -1,5 +1,4 @@
 # deep_keypoints #
-==============
 
 ## What ##
 
@@ -15,6 +14,7 @@ Of course, the data isn't entirely clean, so there's a lot of cleanup code in `d
 One challenging aspect of the keypoint problem is that classifiers tend to have a very hard time distinguishing mouths from eyes in grainy black-and-white. To combat this, I thought that training an autoencoder to learn features specific to something like an eye would be interesting. 
 It's pretty fascinating how a single-layer autoencoder filters images of eyes:
 ![alt tag](https://raw.github.com/cowpig/deep_keypoints/master/imgs/eyes_original.png)
+
 becomes:
 ![alt tag](https://raw.github.com/cowpig/deep_keypoints/master/imgs/eyes_recreated_epoch_14500.png)
 Interesting how things like the rims of glasses are often filtered out of the image completely, or shades lightened to the point that it's possible to see through the lens. This seems to be on par with the way that human beings perceive visual data, and also serves as a powerful filter for extracting the features of an image that are most eye-like.
