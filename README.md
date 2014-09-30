@@ -22,17 +22,15 @@ To put it mathematically, an optimal autoencoder holds the following property tr
 
 `f(f(input * w + b_in) * w + b_out) = input`
 
-Where:
-`f` is the [sigmoid function](http://mathworld.wolfram.com/SigmoidFunction.html)
-`w` is the weight matrix that represents the connection strengths between the inputs and hidden nodes
-`b_in` and `b_out` are the bias vectors
+Where `f` is the [sigmoid function](http://mathworld.wolfram.com/SigmoidFunction.html), `w` is the weight matrix that represents the connection strengths between the inputs and hidden nodes, `b_in` and `b_out` are the bias vectors.
 
 In practice, using denoising encoders to do unsupervised pretraining of a neural network tends to both improve training set costs, and reduce overfitting (and thus test set costs).
 
 A denoising autoencoder works in much the same way as a typical single-layered neural network for classification, but with two significant differences:
 * The original input is the expected output (as opposed to a one-hot vector)
-* Noise is randomly added to the input vector (hence *denoising* autoencoder) before being passed into the network
-The second part consists of setting random input units to zero, and forces the dAA to learn *dependencies between inputs*, and not just a way to map the inputs back onto themselves.
+* Noise is randomly added to the input vector (hence **denoising** autoencoder) before being passed into the network
+
+The second part consists of setting random input units to zero, and forces the dAA to learn **dependencies between inputs**, and not just a way to map the inputs back onto themselves. 
 
 ## Using dAAs for Eye Classification ##
 
