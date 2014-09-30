@@ -46,6 +46,25 @@ becomes:
 ![alt tag](https://raw.github.com/cowpig/deep_keypoints/master/imgs/eyes_recreated_epoch_14500.png)
 
 It's interesting how things like the rims of glasses are often filtered out of the image completely, or shades lightened to the point that it's possible to see through the lens. This seems to be on par with the way that human beings perceive visual data, and also serves as a powerful filter for extracting the features of an image that are most eye-like.
+
+Here's a visual representation of the progression of the features through training:
+
+![alt tag](https://raw.github.com/cowpig/deep_keypoints/master/imgs/eyes_epoch_10.png)
+
+*after 10 epochs, the filters are mostly just noise*
+
+![alt tag](https://raw.github.com/cowpig/deep_keypoints/master/imgs/eyes_epoch_100.png)
+
+*after 100 epochs, slightly eye-like features begin to appear*
+
+![alt tag](https://raw.github.com/cowpig/deep_keypoints/master/imgs/eyes_epoch_1000.png)
+
+*after 1000 epochs, there remain many noisy features, but the general contours of eyes are being modelled, as well as irises*
+
+![alt tag](https://raw.github.com/cowpig/deep_keypoints/master/imgs/eyes_epoch_14500.png)
+
+*after 14500 epochs, many features focus in some way on the contour of the eye, the iris or white of the inside, or skin folds. Almost all of the features are visibly identifiable as eye features*
+
 And indeed, the error rate for the eye classifier drops significantly when the weights of the neural network are pretrained with an autoencoder:
 ![alt tag](https://raw.github.com/cowpig/deep_keypoints/master/imgs/compare_networks.png)
 A error rate drop from about 7.5% to about 4.9% is a massive improvement.
