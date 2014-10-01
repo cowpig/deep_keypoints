@@ -134,8 +134,8 @@ def full_trainset():
 	kpm = build_keypoint_map(labels, COMMON_KEYPOINTS)
 	return add_horizontal_flips(train, kpm)
 
-def shuffle_all(*args, seed=1234):
-	random.seed(1234)
+def shuffle_all(*args):
+	# random.seed(1234)
 	idx = range(len(args[0]))
 	random.shuffle(idx)
 	for arg in args:

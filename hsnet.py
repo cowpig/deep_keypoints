@@ -19,17 +19,28 @@ s_labels = theano.shared(labels, borrow=True)
 x = T.matrix('x')
 y = T.matrix('y')
 
+batch_size = 64
+img_shape = (96,96)
+initial_input = x.reshape((batch_size,1) + img_shape)
+
 # given that memory is an issue, programmatically get slices of images
 
-the_layer = nn.NNLayer(inputs=x, n_in=96*96, n_out=96*96, 
+conv_layer = conv.ConvLayer(inputs=initial_input, filter_shape=(50, 1, 4, 4),
+							image_shape=(batch_size, 1) + img_shape,
+							activation=theano.tensor.nnet.sigmoid)
+framesize = 50*47*47
+conv_to_nn = conv_layer.output.reshape((batch_size, framesize))
+
+nn_layer = nn.NNLayer(inputs=x, n_in=framesize, n_out=96*96, 
 						activation=theano.tensor.nnet.sigmoid)
 
 entropy = -T.sum(y * T.log(the_layer.output) + 
                         (1 - y) * T.log(1 - the_layer.output), axis=1)
 # cast necessary because mean divides by length, an int64 
-cost = T.cast(T.mean(entropy), floatX) 
+cost = T.cast(T.mean(entropy), floatX)
 
 
 the_trainer = trainer.Trainer([the_layer], cost, x, s_train, y, s_labels)
+func = the_trainer.get_training_function()
 
 the_trainer.run_epochs()
