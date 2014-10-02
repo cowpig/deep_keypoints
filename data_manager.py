@@ -2,7 +2,7 @@ import cPickle
 import csv
 import random
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from scipy import ndimage
 from scipy.misc import imresize
 
