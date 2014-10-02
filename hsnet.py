@@ -25,10 +25,10 @@ initial_input = x.reshape((batch_size,1) + img_shape)
 
 # given that memory is an issue, programmatically get slices of images
 
-conv_layer = conv.ConvLayer(inputs=initial_input, filter_shape=(50, 1, 4, 4),
+conv_layer = conv.ConvLayer(inputs=initial_input, filter_shape=(40, 1, 4, 4),
 							image_shape=(batch_size, 1) + img_shape,
-							activation=theano.tensor.nnet.sigmoid)
-framesize = 50*47*47
+							activation=theano.tensor.nnet.sigmoid, poolsize=(3, 3))
+framesize = 40*47*47
 conv_to_nn = conv_layer.output.reshape((batch_size, framesize))
 
 nn_layer = nn.NNLayer(inputs=x, n_in=framesize, n_out=96*96, 
