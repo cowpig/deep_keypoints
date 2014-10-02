@@ -40,7 +40,7 @@ entropy = -T.sum(y * T.log(the_layer.output) +
 cost = T.cast(T.mean(entropy), floatX)
 
 
-the_trainer = trainer.Trainer([the_layer], cost, x, s_train, y, s_labels)
+the_trainer = trainer.Trainer([conv_layer, nn_layer], cost, x, s_train, y, s_labels)
 func = the_trainer.get_training_function()
 
 the_trainer.run_epochs()
