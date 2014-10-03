@@ -18,7 +18,7 @@ class Trainer(object):
 	#	to be trained, only provide that layer to the trainer.
 	def __init__(self, layers, cost, x, shared_x, y, shared_y, x_mask=None,
 						y_mask=None, shared_mask=None, batch_size=64, 
-						learning_rate=0.05, momentum=0.9, weight_decay=0.0002):
+						learning_rate=0.01, momentum=0.9, weight_decay=0.0002):
 
 		if type(layers) == list:
 			self.layers = layers
@@ -122,6 +122,7 @@ class Trainer(object):
 			costs = epoch(self.batch_size, n_train, training_function)
 
 			print "=== epoch {} ===".format(self.steps)
+			print costs
 			print "avg cost: {:.5f} (prev best: {:.5f}; ratio: {:.5f})".format(
 							np.mean(costs), best_cost, best_cost/np.mean(costs))
 			

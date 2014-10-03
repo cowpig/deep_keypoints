@@ -31,11 +31,11 @@ conv_layer = conv.ConvLayer(inputs=initial_input, filter_shape=(50, 1, 4, 4),
 framesize = 50*47*47
 conv_to_nn = conv_layer.output.reshape((batch_size, framesize))
 
-nn_layer = nn.NNLayer(inputs=x, n_in=framesize, n_out=96*96, 
+nn_layer = nn.NNLayer(inputs=conv_to_nn, n_in=framesize, n_out=96*96, 
 						activation=theano.tensor.nnet.sigmoid)
 
-entropy = -T.sum(y * T.log(the_layer.output) + 
-                        (1 - y) * T.log(1 - the_layer.output), axis=1)
+entropy = -T.sum(y * T.log(nn_layer.output) + 
+                        (1 - y) * T.log(1 - nn_layer.output), axis=1)
 # cast necessary because mean divides by length, an int64 
 cost = T.cast(T.mean(entropy), floatX)
 

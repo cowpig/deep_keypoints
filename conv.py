@@ -17,7 +17,7 @@ class ConvLayer(object):
 			  high=np.sqrt(3./fan_in),
 			  size=filter_shape), dtype=theano.config.floatX)
 
-		self.W = theano.shared(value=W_values, name='W')
+		self.W = theano.shared(value=W_values, name='Wconv')
 
 		b_values = np.zeros((filter_shape[0],), dtype=theano.config.floatX)
 		self.b = theano.shared(value=b_values, name='b')
