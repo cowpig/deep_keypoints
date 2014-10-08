@@ -17,8 +17,9 @@ class Trainer(object):
 	#	to the provided cost function. In the case where only one layer needs
 	#	to be trained, only provide that layer to the trainer.
 	def __init__(self, layers, cost, x, shared_x, y, shared_y, x_mask=None,
-						y_mask=None, shared_mask=None, batch_size=64, 
-						learning_rate=0.01, momentum=0.9, weight_decay=0.0002):
+						y_mask=None, shared_mask=None, valid_x=None, valid_y=None,
+						test_x=None, test_y=None, error_func=None, batch_size=64, 
+						learning_rate=0.05, momentum=0.9, weight_decay=0.0002):
 
 		if type(layers) == list:
 			self.layers = layers
@@ -37,6 +38,18 @@ class Trainer(object):
 		#	by some "mask" matrix in order to manipulate the training
 		self.x_mask = x_mask
 		self.shared_mask = shared_mask
+
+		# supervised training
+		self.valid_x = valid_x
+		self.valid_y = valid_y
+		self.test_x = test_x
+		self.test_y = test_y
+
+		# to use if training and valid/test errors are different functions
+		if not error_func == None:
+			self.error_func = error_func
+		else:
+			self.error_func = self.cost
 
 		# hyperparameters:
 		self.batch_size = batch_size
@@ -98,6 +111,15 @@ class Trainer(object):
 		return theano.function([i, bs], self.cost, 
 						updates=self.updates, 
 						givens=given)
+
+	def get_valid_test_functions(self):
+		given_valid = {self.x : self.valid_x,
+				self.y : self.valid_y}
+		valid_func = theano.function([], self.error_func, givens=given_valid)
+
+		given_test = {self.x : self.test_x,
+				self.y : self.test_y}
+		test_func = theano.function([], self.error_func, givens=given_test)
 
 
 
