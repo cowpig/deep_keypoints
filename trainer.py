@@ -45,6 +45,9 @@ class Trainer(object):
 		self.test_x = test_x
 		self.test_y = test_y
 
+		if valid_x && valid_y && test_x && test_y:
+			self.supervised = True
+
 		# to use if training and valid/test errors are different functions
 		if not error_func == None:
 			self.error_func = error_func
@@ -75,9 +78,7 @@ class Trainer(object):
 					for param in self.params
 			}
 
-		self.steps = 0
-		self.costs = [(0, float('inf'))]
-
+		self.epochs = 0
 
 	def get_training_function(self):
 		lr, wd, mom = T.scalars('lr', 'wd', 'mom')
@@ -122,7 +123,6 @@ class Trainer(object):
 		test_func = theano.function([], self.error_func, givens=given_test)
 
 
-
 	def run_epochs(self, min_epochs=50, min_improvement=1.001, 
 					lr_decay=0.1, decay_modulo=25, custom_training=None):
 		start = time.time()
@@ -136,33 +136,65 @@ class Trainer(object):
 		# train for at least this many epochs
 		epoch_stop = min_epochs
 		n_train = len(self.shared_x.get_value())
-		since_last_decay = 0
-		best_cost = float('inf')
 
-		while self.steps < epoch_stop:
-			self.steps += 1
-			costs = epoch(self.batch_size, n_train, training_function)
+		if self.supervised:
+			valid_function, test_function = self.get_valid_test_functions()
+			self.best_cost_valid = float('inf')
+			best_cost_test = float('inf')
 
-			print "=== epoch {} ===".format(self.steps)
-			print costs
-			print "avg cost: {:.5f} (prev best: {:.5f}; ratio: {:.5f})".format(
-							np.mean(costs), best_cost, best_cost/np.mean(costs))
-			
-			# keep training as long as we are improving enough
-			if (np.mean(costs) * min_improvement) < best_cost:
-				epoch_stop += 1
-				since_last_decay += 1
-			elif lr_decay and since_last_decay - decay_modulo > 0:
-				self.learning_rate *= (1 - lr_decay)
-				since_last_decay = 0
-				print "no improvement; decreasing learning rate to {}".format(
-															self.learning_rate)
-				print "epochs left: {}".format(epoch_stop)
+			self.train_costs = []
+			self.valid_costs = [(0, float('inf'))]
+			self.test_costs = [(0, float('inf'))]
 
-			if np.mean(costs) < best_cost:
-				best_cost = np.mean(costs)
+			while self.epochs < epoch_stop:
+				self.epochs += 1
+				self.train_costs.append(epoch(self.batch_size, n_train, training_function))
+				print "\tTraining cost at epoch {}: {:.5f}".format(self.epoch, self.train_costs[-1])
 
-			self.costs.append((self.steps, np.mean(costs)))
+				if self.epochs % 5 == 0:
+					validation_cost = valid_function()
+					self.valid_costs.append((self.epochs, validation_cost))
+					print "Validation score: {:.5f} (previous best {:.5f})".format(
+							validation_cost, self.best_cost_valid)
+					print "\timprovement ratio: {}".format(self.best_cost_valid/validation_cost)
+					if (validation_cost * min_improvement) < self.best_cost_valid:
+						# with sufficient improvement, delay stopping of training
+						epoch_stop += 5
+
+						test_cost = test_function()
+						print "\tTest score: {:.5f} (prev best {:.5f})".format(
+							test_cost, best_cost_test)
+						print "\t\timprovement ratio: {}".format(best_cost_test/test_cost)
+
+
+		else:
+			since_last_decay = 0
+			best_cost = float('inf')
+			self.costs = [(0, float('inf'))]
+
+			while self.epochs < epoch_stop:
+				self.epochs += 1
+				costs = epoch(self.batch_size, n_train, training_function)
+
+				print "=== epoch {} ===".format(self.epochs)
+				print "avg cost: {:.5f} (prev best: {:.5f}; ratio: {:.5f})".format(
+								np.mean(costs), best_cost, best_cost/np.mean(costs))
+				
+				# keep training as long as we are improving enough
+				if (np.mean(costs) * min_improvement) < best_cost:
+					epoch_stop += 1
+					since_last_decay += 1
+				elif lr_decay and since_last_decay - decay_modulo > 0:
+					self.learning_rate *= (1 - lr_decay)
+					since_last_decay = 0
+					print "no improvement; decreasing learning rate to {}".format(
+																self.learning_rate)
+					print "epochs left: {}".format(epoch_stop)
+
+				if np.mean(costs) < best_cost:
+					best_cost = np.mean(costs)
+
+				self.costs.append((self.epochs, np.mean(costs)))
 
 
 		elapsed = (time.time() - start)
