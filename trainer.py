@@ -45,8 +45,7 @@ class Trainer(object):
 		self.test_x = test_x
 		self.test_y = test_y
 
-		if valid_x && valid_y && test_x && test_y:
-			self.supervised = True
+		self.supervised = valid_x and valid_y and test_x and test_y
 
 		# to use if training and valid/test errors are different functions
 		if not error_func == None:
@@ -138,6 +137,8 @@ class Trainer(object):
 		n_train = len(self.shared_x.get_value())
 
 		if self.supervised:
+			print "Beginning supervised training..."
+
 			valid_function, test_function = self.get_valid_test_functions()
 			self.best_cost_valid = float('inf')
 			best_cost_test = float('inf')
@@ -168,6 +169,8 @@ class Trainer(object):
 
 
 		else:
+			print "Beginning unsupervised training..."
+
 			since_last_decay = 0
 			best_cost = float('inf')
 			self.costs = [(0, float('inf'))]
