@@ -4,7 +4,7 @@ import numpy as np
 import time
 from collections import OrderedDict
 
-def epoch(batch_size_to_use, n_train, training_function):
+def run_epoch(batch_size_to_use, n_train, training_function):
 	i=0
 	costs = []
 	while i + batch_size_to_use <= n_train:
@@ -121,6 +121,7 @@ class Trainer(object):
 				self.y : self.test_y}
 		test_func = theano.function([], self.error_func, givens=given_test)
 
+		return valid_func, test_func
 
 	def run_epochs(self, min_epochs=50, min_improvement=1.001, 
 					lr_decay=0.1, decay_modulo=25, custom_training=None):
@@ -149,23 +150,31 @@ class Trainer(object):
 
 			while self.epochs < epoch_stop:
 				self.epochs += 1
-				self.train_costs.append(epoch(self.batch_size, n_train, training_function))
-				print "\tTraining cost at epoch {}: {:.5f}".format(self.epoch, self.train_costs[-1])
+				costs = run_epoch(self.batch_size, n_train, training_function)
+				self.train_costs.append(np.mean(costs))
+				print "\tTraining cost at epoch {}: {:.5f}".format(self.epochs, self.train_costs[-1])
 
 				if self.epochs % 5 == 0:
-					validation_cost = valid_function()
+					# annoyingly, scalars are returned as numpy arrays of shape () by theano
+					# 	so we case them to floats
+					validation_cost = float(valid_function())
 					self.valid_costs.append((self.epochs, validation_cost))
 					print "Validation score: {:.5f} (previous best {:.5f})".format(
 							validation_cost, self.best_cost_valid)
 					print "\timprovement ratio: {}".format(self.best_cost_valid/validation_cost)
 					if (validation_cost * min_improvement) < self.best_cost_valid:
 						# with sufficient improvement, delay stopping of training
+						self.best_cost_valid = validation_cost
+
 						epoch_stop += 5
 
-						test_cost = test_function()
+						test_cost = float(test_function())
 						print "\tTest score: {:.5f} (prev best {:.5f})".format(
 							test_cost, best_cost_test)
-						print "\t\timprovement ratio: {}".format(best_cost_test/test_cost)
+						ratio = best_cost_test/test_cost
+						print "\t\timprovement ratio: {}".format(ratio)
+						if ratio > 1:
+							best_cost_test = test_cost
 
 
 		else:
@@ -177,7 +186,7 @@ class Trainer(object):
 
 			while self.epochs < epoch_stop:
 				self.epochs += 1
-				costs = epoch(self.batch_size, n_train, training_function)
+				costs = run_epoch(self.batch_size, n_train, training_function)
 
 				print "=== epoch {} ===".format(self.epochs)
 				print "avg cost: {:.5f} (prev best: {:.5f}; ratio: {:.5f})".format(

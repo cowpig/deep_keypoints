@@ -21,8 +21,8 @@ data, labels = dm.shuffle_all(*dm.full_trainset())
 # labels = np.array([keymap.ravel() for keymap in labels], dtype=floatX)
 
 # bugcheck
-data = np.array([img.ravel()[:12**2] for img in data], dtype=floatX)[:256]
-labels = np.array([keymap.ravel()[:12**2] for keymap in labels], dtype=floatX)[:256]
+data = np.array([img.ravel()[:12**2] for img in data], dtype=floatX)[:320]
+labels = np.array([keymap.ravel()[:12**2] for keymap in labels], dtype=floatX)[:320]
 
 n_train = int(len(data) * 0.7) - int(len(data) * 0.7) % batch_size
 n_test = int(len(data) - n_train) / 2
@@ -49,7 +49,9 @@ conv_layer = conv.ConvLayer(inputs=initial_input, filter_shape=conv_filter_shape
 							activation=theano.tensor.nnet.sigmoid, poolsize=conv_poolsize)
 framesize = 50*47*47
 # again for bugchecking
-framesize = 50*5*5
+framesize = 50*4*4
+
+print framesize
 
 conv_to_nn = conv_layer.output.reshape((batch_size, framesize))
 
