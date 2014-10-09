@@ -9,7 +9,7 @@ import theano.tensor as T
 batch_size = 64
 img_shape = (96,96)
 # bugcheck
-img_shape = (12,12)
+# img_shape = (12,12)
 conv_filter_shape = (50, 1, 5, 5)
 conv_stride = (1,1)
 conv_poolsize = (2,2)
@@ -21,7 +21,7 @@ data, labels = dm.shuffle_all(*dm.full_trainset())
 # data = np.array([img.ravel()[:12**2] for img in data], dtype=floatX)[:320]
 # labels = np.array([keymap.ravel()[:12**2] for keymap in labels], dtype=floatX)[:320]
 
-data = np.array([img.ravel() for img in train], dtype=floatX)
+data = np.array([img.ravel() for img in data], dtype=floatX)
 labels = np.array([keymap.ravel() for keymap in labels], dtype=floatX)
 
 
@@ -48,7 +48,7 @@ initial_input = x.reshape((batch_size,1) + img_shape)
 conv_layer = conv.ConvLayer(inputs=initial_input, filter_shape=conv_filter_shape,
 							image_shape=(batch_size, 1) + img_shape, stride=conv_stride,
 							activation=theano.tensor.nnet.sigmoid, poolsize=conv_poolsize)
-framesize = 50*47*47
+framesize = 50*46*46
 # again for bugchecking
 # framesize = 50*4*4
 
