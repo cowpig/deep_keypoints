@@ -69,9 +69,11 @@ cost = T.cast(T.mean(entropy), floatX)
 
 # needed for validation/testing.. 
 # TODO: I should refactor this into the conv/nnet classes
-convolutions = T.nnet.conv.conv2d(initial_input, conv_layer.W,
+test_input = x.reshape((n_test,1) + img_shape)
+convolutions = T.nnet.conv.conv2d(test_input, conv_layer.W,
 				filter_shape=conv_filter_shape, image_shape=(n_test, 1) + img_shape,
 				subsample=conv_stride)
+
 pools = T.signal.downsample.max_pool_2d(input=convolutions, ds=conv_poolsize, ignore_border=False)
 conv_activation = T.nnet.sigmoid(pools + conv_layer.b.dimshuffle('x', 0, 'x', 'x'))
 conv_reshape = conv_activation.reshape((n_test, framesize))
