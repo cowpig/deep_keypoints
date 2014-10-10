@@ -19,7 +19,7 @@ class Trainer(object):
 	def __init__(self, layers, cost, x, shared_x, y, shared_y, x_mask=None,
 						y_mask=None, shared_mask=None, valid_x=None, valid_y=None,
 						test_x=None, test_y=None, error_func=None, batch_size=64, 
-						learning_rate=0.05, momentum=0.9, weight_decay=0.0002):
+						learning_rate=0.1, momentum=0.9, weight_decay=0.001):
 
 		if type(layers) == list:
 			self.layers = layers
@@ -161,7 +161,7 @@ class Trainer(object):
 					self.valid_costs.append((self.epochs, validation_cost))
 					print "Validation score: {:.5f} (previous best {:.5f})".format(
 							validation_cost, self.best_cost_valid)
-					print "\timprovement ratio: {}".format(self.best_cost_valid/validation_cost)
+					print "\timprovement ratio: {}".format(validation_cost/self.best_cost_valid)
 					if (validation_cost * min_improvement) < self.best_cost_valid:
 						# with sufficient improvement, delay stopping of training
 						self.best_cost_valid = validation_cost
@@ -171,7 +171,7 @@ class Trainer(object):
 						test_cost = float(test_function())
 						print "\tTest score: {:.5f} (prev best {:.5f})".format(
 							test_cost, best_cost_test)
-						ratio = best_cost_test/test_cost
+						ratio = test_cost/best_cost_test
 						print "\t\timprovement ratio: {}".format(ratio)
 						if ratio > 1:
 							best_cost_test = test_cost
