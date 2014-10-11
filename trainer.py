@@ -19,7 +19,7 @@ class Trainer(object):
 	def __init__(self, layers, cost, x, shared_x, y, shared_y, x_mask=None,
 						y_mask=None, shared_mask=None, valid_x=None, valid_y=None,
 						test_x=None, test_y=None, error_func=None, batch_size=64, 
-						learning_rate=0.1, momentum=0.9, weight_decay=0.001):
+						learning_rate=0.03, momentum=0.9, weight_decay=0.001):
 
 		if type(layers) == list:
 			self.layers = layers
