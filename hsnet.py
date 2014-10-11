@@ -89,10 +89,7 @@ func = the_trainer.get_training_function()
 
 the_trainer.run_epochs()
 
-params["Wconv"] = conv_layer.w.value()
-params["Wconv"] = conv_layer.W.value()
 params["Wconv"] = conv_layer.W.get_value()
-params["bconv"] = conv_layer.b.get_value
 params["bconv"] = conv_layer.b.get_value()
 params["Wnn"] = nn_layer.W.get_value()
 params["bnn"] = nn_layer.b.get_value()
